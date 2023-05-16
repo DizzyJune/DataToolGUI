@@ -2,10 +2,24 @@ import os
 import tkinter as tk
 from tkinter import ttk
 from tkinter import *
+import configparser
+import sys
 
 Menu = Tk()
 Menu.title('DataToolGUI')
 Menu.geometry('800x500')
+
+config = configparser.ConfigParser()
+config_file = os.path.join(os.path.dirname(os.path.dirname(sys.executable)), 'datatoolguiconfig.ini')
+if os.path.exists(config_file):
+    config.read(config_file)
+    owpath = config['PATHS']['owpath']
+    exportpath = config['PATHS']['exportpath']
+    toolexec = config['PATHS']['toolexec']
+else:
+    owpath = ''
+    exportpath = ''
+    toolexec = ''
 
 HeroOptions = [
 "Select Hero",
@@ -54,34 +68,53 @@ variable.set(HeroOptions[0])
 def ExtractSkin():
     inputhero = variable.get()
     inputskin = skininput.get()
-    dir_path = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(dir_path)
-    os.system(fr'datatool.exe "D:\Overwatch" extract-unlocks "D:\DataTool\Exports" "{inputhero}|skin={inputskin}"')
+    toolpath = toolexecinput.get()
+    os.chdir(toolpath)
 
-MenuTitle = ttk.Label(Menu, text = 'DataToolGUI', font = 'Calibri 80 bold')
-MenuTitle.pack(pady = -20)
-disclaimer = ttk.Label(Menu, text = "Disclaimer: You must run this in the same directory as Datatool.exe!", font = 'Calibri 20')
-disclaimer.pack()
+    config = configparser.ConfigParser()
+    config['PATHS'] = {
+        'owpath': owpathinput.get(),
+        'exportpath': exportpathinput.get(),
+        'toolexec': toolexecinput.get()
+    }
+    with open('datatoolguiconfig.ini', 'w') as configfile:
+        config.write(configfile)
+
+    os.system(fr'datatool.exe "{owpathinput.get()}" extract-unlocks "{exportpathinput.get()}" "{inputhero}|skin={inputskin}"')
+
+
+MenuTitle = ttk.Label(Menu, text='DataToolGUI', font='Calibri 80 bold')
+MenuTitle.pack(side='top')
 
 heroframe = ttk.Frame(Menu)
-#entrylabel = ttk.Label(heroframe, text = "Hero", font = 'Calibri 25')
-#entrylabel.pack(side = 'left', padx = '10')
 inputoption = ttk.OptionMenu(heroframe, variable, *HeroOptions)
 inputoption.config(width = 13)
 inputoption.pack(ipady=5)
 heroframe.pack(pady = '5')
 
-skinframe = ttk.Frame(Menu)
-skinlabel = ttk.Label(skinframe, text = "Skin", font = 'Calibri 25')
-skinlabel.pack(side = 'left', padx = '16')
-skininput = ttk.Entry(skinframe, font = 'Calibri 20')
-skininput.pack(side = 'left')
-skinframe.pack()
-
-pathsframe = ttk.Frame(Menu)
-toolpathlabel = ttk.Label(pathsframe, text = "Datatool.exe Path", font = 'Calibri 25')
+owfilespath = ttk.Frame(Menu)
+owpathlabel = ttk.Label(owfilespath, text = "Overwatch Files Path", font = 'Calibri 20')
+owpathinput = ttk.Entry(owfilespath, font = 'Calibri 17')
+owpathinput.insert(0, owpath)
+exportpathlabel = ttk.Label(owfilespath, text = "Export Path", font = 'Calibri 20')
+exportpathinput = ttk.Entry(owfilespath, font = 'Calibri 17')
+exportpathinput.insert(0, exportpath)
+skinlabel = ttk.Label(owfilespath, text = "Skin", font = 'Calibri 20')
+skininput = ttk.Entry(owfilespath, font = 'Calibri 17')
+toolexeclabel = ttk.Label(owfilespath, text = 'DataTool.exe Path', font = 'Calibri 20')
+toolexecinput = ttk.Entry(owfilespath, font = 'Calibri 17')
+toolexecinput.insert(0, toolexec)
+skinlabel.grid(row=0, column=0, padx=10, pady=10)
+skininput.grid(row=0, column=1, padx=10, pady=10)
+owpathlabel.grid(row=1, column=0, padx=10, pady=10)
+owpathinput.grid(row=1, column=1, padx=10, pady=10)
+exportpathlabel.grid(row=2, column=0, padx=10, pady=10)
+exportpathinput.grid(row=2, column=1, padx=10, pady=10)
+toolexeclabel.grid(row=3, column=0, padx=10, pady=10)
+toolexecinput.grid(row=3, column=1, padx=10, pady=10)
+owfilespath.pack()
 
 ExportButton = ttk.Button(Menu, text = "Export", command = ExtractSkin, width = 20)
-ExportButton.pack()
+ExportButton.pack(pady = 10)
 
 Menu.mainloop()
